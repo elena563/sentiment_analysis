@@ -24,3 +24,5 @@ EVALUATION_TABLE = "grid_search_results"
 # Logging Configuration
 LOGGING_LEVEL = "INFO"
 
+# saved models
+MODELS_PATH = "../models/"
