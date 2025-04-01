@@ -5,15 +5,29 @@ import streamlit as st
 import pickle
 from src import config
 
- 
+st.set_page_config(
+    page_title="Sentiment Analysis",  # Titolo della pagina
+    page_icon="💻",  # Favicon
+)
 
 with open(f"{config.MODELS_PATH}vectorizer.pickle", "rb") as f:    
         vectorizer = pickle.load(f)
 
-with open(f"{config.MODELS_PATH}random_forest.pickle", "rb") as file:        # serve ad aprire il file e poi chiuderlo
-        model = pickle.load(file)
+
 
 st.title("Text Representation")
+
+model_name = st.selectbox(
+    "Select Model",
+    ("Random Forest", "Logistic Regression"),
+)
+model_path = f"{config.MODELS_PATH}random_forest.pickle" if model_name == "Random Forest" else f"{config.MODELS_PATH}logistic_regression.pickle"
+
+if not os.path.exists(model_path):
+    st.error(f"No trained model found for {model_name}. Run the training script first.")
+else:
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)  
 
 user_input = st.text_area("Enter text to classify", "")
 

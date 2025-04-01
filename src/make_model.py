@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import os
 import sys
@@ -25,7 +26,7 @@ def load_data():
 
 def train_model(grid_search=False):
     """Trains a Random Forest model with GridSearchCV and saves evaluation metrics to CSV."""
-    df = load_data().head(100)  # we use only 100 records
+    df = load_data().head(20000)  # we use only 100 records
 
     # Save original indices before vectorization
     df_indices = df.index
@@ -56,27 +57,34 @@ def train_model(grid_search=False):
 
         best_model = grid_search.best_estimator_
         y_pred = best_model.predict(X_test)
-    
+            
     else:
         rf = RandomForestClassifier()
         rf.fit(X_train, y_train)
-        y_pred = rf.predict(X_test)
+        y_predrf = rf.predict(X_test)
+ 
+    lr = LogisticRegression()
+    lr.fit(X_train, y_train)
+    y_predlr = rf.predict(X_test)
 
     logging.info('Saving model...')
     with open(os.path.join(config.MODELS_PATH, "random_forest.pickle"), "wb") as file:        # serve ad aprire il file e poi chiuderlo
         pickle.dump(rf, file)
+    with open(os.path.join(config.MODELS_PATH, "logistic_regression.pickle"), "wb") as file:        # serve ad aprire il file e poi chiuderlo
+        pickle.dump(rf, file)
 
     # Create a DataFrame for the test set with predictions
     test_df = df.loc[test_idx].copy()  # Copy test set rows
-    test_df['prediction'] = y_pred  # Add predictions
+    test_df['predictionrf'] = y_predrf  # Add predictions
+    test_df['predictionlr'] = y_predlr 
 
 
     # Compute metrics
     metrics = {
-        'accuracy': accuracy_score(y_test, y_pred),
-        'precision': precision_score(y_test, y_pred, average='weighted', zero_division=0),
-        'recall': recall_score(y_test, y_pred, average='weighted', zero_division=0),
-        'f1_score': f1_score(y_test, y_pred, average='weighted', zero_division=0)
+        'accuracy': accuracy_score(y_test, y_predrf),
+        'precision': precision_score(y_test, y_predrf, average='weighted', zero_division=0),
+        'recall': recall_score(y_test, y_predrf, average='weighted', zero_division=0),
+        'f1_score': f1_score(y_test, y_predrf, average='weighted', zero_division=0)
     }
 
     # Connect to the database
